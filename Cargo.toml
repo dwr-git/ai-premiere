@@ -47,6 +47,9 @@ filmcraft-automation = { path = "crates/automation" }
 filmcraft-platform = { path = "crates/platform" }
 filmcraft-testkit = { path = "crates/testkit" }
 
+# The browser boot module (apps/ai-premiere-boot) inflates the app's parts where the browser can't.
+flate2 = { version = "1.1", default-features = false, features = ["rust_backend"] }
+
 # foundation
 thiserror = "2"
 serde = { version = "1", features = ["derive", "rc"] }

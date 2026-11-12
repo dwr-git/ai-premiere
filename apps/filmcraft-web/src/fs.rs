@@ -99,6 +99,25 @@ pub fn register_blob(name: &str, blob: web_sys::Blob) -> String {
     })
 }
 
+/// AI Видео: register a `Blob` at exactly `path` (a project's media from the user's projects on
+/// the server, so the project finds it where it was imported). Nothing changes, and `false` comes
+/// back, when something is at that path already.
+pub fn register_blob_at(path: &str, blob: web_sys::Blob) -> bool {
+    let size = blob.size() as u64;
+    FS.with(|fs| {
+        let mut fs = fs.borrow_mut();
+        if fs.entries.contains_key(path) {
+            return false;
+        }
+        let id = fs.next_id;
+        fs.next_id += 1;
+        fs.blobs.insert(id, blob);
+        fs.entries.insert(path.to_string(), Entry::Blob { id, size });
+        fs.recount();
+        true
+    })
+}
+
 /// Put bytes at a path (no download).
 pub fn put(path: &str, data: Vec<u8>) {
     FS.with(|fs| fs.borrow_mut().entries.insert(path.to_string(), Entry::Mem(data.into())));

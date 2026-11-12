@@ -165,6 +165,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ai-premiere-boot"
+version = "0.20.1"
+dependencies = [
+ "flate2",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "allocator-api2"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2521,6 +2532,7 @@ dependencies = [
  "filmcraft-frame",
  "filmcraft-isobmff",
  "filmcraft-media",
+ "filmcraft-text",
  "filmcraft-time",
  "filmcraft-ui-egui",
  "js-sys",

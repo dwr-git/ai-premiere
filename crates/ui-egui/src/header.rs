@@ -15,7 +15,7 @@ pub const HEIGHT: f32 = 38.0;
 
 /// Draws the header bar in `rect` and handles its clicks: Home, the mode tabs, the workspace name
 /// and its menu (the workspaces, then Reset to Saved Layout, Save Changes to this Workspace, Save as
-/// New Workspace… and Edit Workspaces…), Discord and the quick actions.
+/// New Workspace… and Edit Workspaces…) and the quick actions; on the web, the house and «ИИ».
 pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().clone();
@@ -30,18 +30,21 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
         ui.ctx().send_viewport_cmd(egui::ViewportCommand::Maximized(!max));
     }
     let mut x = rect.min.x + if app.integrated_titlebar { 104.0 } else { 14.0 };
-    // Home
-    let home = Rect::from_center_size(pos2(x + 10.0, rect.center().y), vec2(26.0, 26.0));
-    let hresp = ui.interact(home, egui::Id::unique("hdr-home"), Sense::click()).on_hover_text(tl!("Home"));
-    app.auto.add("header.home", home, "Home");
-    if hresp.hovered() {
-        p.rect_filled(home, 4.0, t.hover);
+    // Home (the Import screen). On the web the house at the right end goes back to the site
+    // instead, so this one is left out: one house, top right.
+    if app.hooks.go_home.is_none() {
+        let home = Rect::from_center_size(pos2(x + 10.0, rect.center().y), vec2(26.0, 26.0));
+        let hresp = ui.interact(home, egui::Id::unique("hdr-home"), Sense::click()).on_hover_text(tl!("Home"));
+        app.auto.add("header.home", home, "Home");
+        if hresp.hovered() {
+            p.rect_filled(home, 4.0, t.hover);
+        }
+        icons::paint(&p, home.shrink(5.0), Icon::Home, if hresp.hovered() { t.text } else { t.text_dim });
+        if hresp.clicked() {
+            app.ui.mode = Mode::Import;
+        }
+        x = home.max.x + 16.0;
     }
-    icons::paint(&p, home.shrink(5.0), Icon::Home, if hresp.hovered() { t.text } else { t.text_dim });
-    if hresp.clicked() {
-        app.ui.mode = Mode::Import;
-    }
-    x = home.max.x + 16.0;
     // Mode tabs (14 pt; active = primary text with a 2 pt underline under the label)
     for (m, label, shown) in [(Mode::Import, "Import", tl!("Import")), (Mode::Edit, "Edit", tl!("Edit")), (Mode::Export, "Export", tl!("Export"))] {
         let active = app.ui.mode == m;
@@ -75,6 +78,9 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
     let title = if app.session.is_dirty() { tlf!("{name} - Edited", name = app.session.project.name) } else { app.session.project.name.clone() };
     // Right cluster: icons at ~38 pt pitch, then workspace name in caps.
     let mut rx = rect.max.x - 14.0;
+    // AI Видео (web): the house back to the site at the right end, the «ИИ» chip by it.
+    rx = web_buttons(app, ui, rect, rx);
+    let web_w = rect.max.x - 14.0 - rx;
     let mut btn = |ui: &mut egui::Ui, icon: Icon, id: &str, tip: &str, app: &mut FilmcraftApp| -> egui::Response {
         let r = Rect::from_center_size(pos2(rx - 14.0, rect.center().y), vec2(28.0, 28.0));
         rx -= 38.0;
@@ -100,7 +106,7 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
         app.ui.mode = Mode::Export;
     }
     // Quick Export: a popup with File Name & Location, a preset list and Export (Premiere 26)
-    let qx = rect.max.x - 14.0 - 4.0 * 38.0; // the fifth button from the right
+    let qx = rect.max.x - 14.0 - web_w - 4.0 * 38.0; // the fifth button from the right
     if btn(ui, Icon::Export, "quickExport", tl!("Quick Export"), app).clicked() {
         app.ui.export.quick_open = !app.ui.export.quick_open;
         ui.ctx().data_mut(|d| d.insert_temp(egui::Id::unique("quick-export-toggled"), true));
@@ -126,20 +132,10 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
     let wresp = ui.interact(wr, egui::Id::unique("hdr-ws-name"), Sense::click());
     app.auto.add("header.workspaceName", wr, &ws);
     p.galley_with_override_text_color(pos2(wr.min.x + 4.0, rect.center().y - wg.size().y / 2.0), wg, if wresp.hovered() { t.text } else { t.text_dim });
-    // Community: a labelled Discord button, always one click away.
+    // The document title, centred in the room between the menus and the workspace name.
     {
-        let label = "Discord";
-        let g = p.layout_no_wrap(label.to_string(), Tokens::ui(12.0), Color32::WHITE);
-        let w = g.size().x + 34.0;
-        let r = Rect::from_min_size(pos2(wr.min.x - w - 14.0, rect.center().y - 12.0), vec2(w, 24.0));
-        let resp = ui.interact(r, egui::Id::unique("hdr-discord"), Sense::click()).on_hover_text(tl!("Join the ArtCraft Discord (discord.gg/artcraft)"));
-        app.auto.add("header.discord", r, "Join the ArtCraft Discord");
-        ui.painter().rect_filled(r, 12.0, if resp.hovered() { t.accent_hover } else { t.accent });
-        icons::paint(ui.painter(), Rect::from_center_size(pos2(r.min.x + 14.0, r.center().y), vec2(14.0, 14.0)), Icon::Chat, Color32::WHITE);
-        ui.painter().galley(pos2(r.min.x + 25.0, r.center().y - g.size().y / 2.0), g, Color32::WHITE);
-        // Localized menus and user titles can be wider than English. Use the actual gap.
         let left = left_end + 12.0;
-        let right = r.min.x - 12.0;
+        let right = wr.min.x - 12.0;
         if right > left + 40.0 {
             let mut job = egui::text::LayoutJob::simple_singleline(title, Tokens::ui(14.0), t.tab_text_active);
             job.wrap.max_width = right - left;
@@ -152,10 +148,6 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
                 galley,
                 t.tab_text_active,
             );
-        }
-
-        if resp.clicked() {
-            crate::links::open(app, ui.ctx(), crate::links::DISCORD);
         }
     }
     let popup_id = egui::Id::unique("workspaces-popup");
@@ -202,6 +194,68 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
             ui.ctx().data_mut(|d| d.insert_temp(popup_id, false));
         }
     }
+}
+
+/// AI Видео (web): at the right end of the header, a house (back to the site,
+/// [`crate::HostHooks::go_home`]) and the «ИИ» chip (the page's AI menu for titles, captions,
+/// markers and clip names, [`crate::HostHooks::ai_assist`]). Both are drawn in code. Returns the
+/// right edge left for the other buttons.
+fn web_buttons(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect, mut rx: f32) -> f32 {
+    let t = app.tokens;
+    if app.hooks.go_home.is_some() {
+        let r = Rect::from_center_size(pos2(rx - 14.0, rect.center().y), vec2(28.0, 28.0));
+        rx -= 38.0;
+        let resp = ui.interact(r, egui::Id::unique("hdr-home-site"), Sense::click()).on_hover_text("На главную").on_hover_cursor(egui::CursorIcon::PointingHand);
+        app.auto.add("header.goHome", r, "На главную");
+        if resp.hovered() {
+            ui.painter().rect_filled(r, 6.0, t.hover);
+        }
+        let c = r.center();
+        let color = if resp.hovered() { t.accent_hover } else { t.text };
+        let stroke = Stroke::new(1.7, color);
+        let at = |x: f32, y: f32| pos2(c.x + x, c.y + y);
+        // a roof, the walls and a door
+        ui.painter().line(vec![at(-7.5, -0.5), at(0.0, -7.5), at(7.5, -0.5)], stroke);
+        ui.painter().line(vec![at(-5.5, -2.0), at(-5.5, 7.0), at(5.5, 7.0), at(5.5, -2.0)], stroke);
+        ui.painter().rect_filled(Rect::from_min_max(at(-1.7, 2.0), at(1.7, 7.0)), 0.5, color);
+        if resp.clicked()
+            && let Some(home) = app.hooks.go_home.as_mut()
+        {
+            home();
+        }
+    }
+    if app.hooks.ai_assist.is_some() {
+        let on_accent = Color32::WHITE;
+        let galley = ui.painter().layout_no_wrap("ИИ".to_string(), Tokens::semibold(12.0), on_accent);
+        let w = galley.size().x + 32.0;
+        let r = Rect::from_min_size(pos2(rx - w + 4.0, rect.center().y - 11.0), vec2(w, 22.0));
+        rx -= w + 10.0;
+        let tip = "ИИ: титры, субтитры, маркеры и названия клипов";
+        let resp = ui.interact(r, egui::Id::unique("hdr-ai"), Sense::click()).on_hover_text(tip).on_hover_cursor(egui::CursorIcon::PointingHand);
+        app.auto.add("header.ai", r, tip);
+        ui.painter().rect_filled(r, 11.0, if resp.hovered() { t.accent_hover } else { t.accent });
+        // a four-pointed sparkle
+        let c = pos2(r.min.x + 12.0, r.center().y);
+        let (o, i) = (5.5, 1.5);
+        let star = vec![
+            pos2(c.x, c.y - o),
+            pos2(c.x + i, c.y - i),
+            pos2(c.x + o, c.y),
+            pos2(c.x + i, c.y + i),
+            pos2(c.x, c.y + o),
+            pos2(c.x - i, c.y + i),
+            pos2(c.x - o, c.y),
+            pos2(c.x - i, c.y - i),
+        ];
+        ui.painter().add(egui::Shape::convex_polygon(star, on_accent, Stroke::NONE));
+        ui.painter().galley(pos2(r.min.x + 21.0, r.center().y - galley.size().y / 2.0), galley, on_accent);
+        if resp.clicked()
+            && let Some(ai) = app.hooks.ai_assist.as_mut()
+        {
+            ai(r.min.x, r.max.y + 6.0);
+        }
+    }
+    rx
 }
 
 #[cfg(test)]

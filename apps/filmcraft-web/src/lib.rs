@@ -20,6 +20,7 @@
 
 pub mod api;
 pub mod audio;
+pub mod bridge;
 pub mod download_pacing;
 pub mod fs;
 pub mod host;
@@ -84,6 +85,44 @@ pub fn info() -> serde_json::Value {
     INFO.with(|i| i.borrow().clone())
 }
 
+/// Whether a text field of the editor has the keyboard (`aipremiere.wantsKeyboard()`).
+pub fn wants_keyboard() -> bool {
+    CTX.with(|c| c.borrow().as_ref().is_some_and(egui::Context::text_edit_focused))
+}
+
+/// The engine's write hook on the web, AI Видео: a saved project goes to the page while it
+/// takes saves (the user's projects on the server); everything else — exports, captions,
+/// interchange files — and a save nobody takes downloads.
+fn deliver(path: &str, data: &[u8]) {
+    let project = path.to_ascii_lowercase().ends_with(".fcproj") && !path.starts_with("/exports/");
+    if project {
+        match bridge::save_to_page(path, data) {
+            Ok(true) => return,
+            Ok(false) => {}
+            Err(e) => log::warn!("handing {path} to the page: {e}"),
+        }
+    }
+    if let Err(e) = fs::download(path, data) {
+        log::warn!("download {path}: {e:?}");
+    }
+}
+
+/// Leave the editor for the site it lives on: `window.STUDIO_CONFIG.homeUrl` (studio/config.js,
+/// made absolute by the panel), one level up without it.
+fn go_home() {
+    let Some(window) = web_sys::window() else { return };
+    let url = js_sys::Reflect::get(&window, &"STUDIO_CONFIG".into())
+        .ok()
+        .filter(|c| c.is_object())
+        .and_then(|c| js_sys::Reflect::get(&c, &"homeUrl".into()).ok())
+        .and_then(|u| u.as_string())
+        .filter(|u| !u.trim().is_empty())
+        .unwrap_or_else(|| "../".to_string());
+    if let Err(e) = window.location().set_href(&url) {
+        log::error!("couldn't go to {url}: {e:?}");
+    }
+}
+
 /// The eframe app: the shared FilmCraft UI plus the web host's per-frame duties.
 pub struct WebApp {
     pub app: FilmcraftApp,
@@ -115,6 +154,8 @@ impl eframe::App for WebApp {
         // hears when unsaved changes appear or go away.
         if let Some(host) = &self.host {
             host.sync(&self.app.session);
+        } else {
+            bridge::dirty(self.app.session.is_dirty());
         }
         if let Some(a) = &self.audio {
             a.pump();
@@ -163,9 +204,12 @@ pub async fn start(canvas_id: String) -> Result<(), JsValue> {
     webcodecs::probe().await;
 
     api::install()?;
+    // AI Видео: window.aipremiere for the assistant panel and «Мои проекты» (studio/).
+    bridge::install()?;
     import::install_drop_handlers()?;
 
-    let demo = !in_host_mode && !query_flag("empty");
+    // AI Видео starts on an empty project; `?demo` opens the demo project.
+    let demo = !in_host_mode && query_flag("demo");
     let mut web_options = eframe::WebOptions::default();
     // `?webgl`: WebGL2 only. The page reloads with it when starting on WebGPU fails (an adapter
     // whose device can't be created, a driver the browser rejects…); see `index.html`.
@@ -190,16 +234,16 @@ pub async fn start(canvas_id: String) -> Result<(), JsValue> {
                 // offers what it writes as a browser download.
                 match &host_for_app {
                     Some(bridge) => bridge.install(),
-                    None => {
-                        fs::set_on_write(|path, data| {
-                            if let Err(e) = fs::download(path, data) {
-                                log::warn!("download {path}: {e:?}");
-                            }
-                        });
-                    }
+                    None => fs::set_on_write(deliver),
                 }
                 webcodecs::install();
                 let mut session = Session::new(Arc::new(fs::WebServices));
+                // AI Видео: the interface in Russian and the Brand theme. The browser keeps no
+                // preferences between visits; the panel re-applies a theme chosen there.
+                session.prefs.general.interface_language = "ru".into();
+                session.prefs.appearance.appearance_mode = "dark".into();
+                session.prefs.appearance.dark_theme = "brand".into();
+                session.prefs.appearance.sync_color_theme();
                 let mut toast = None;
                 if let Some((name, bytes)) = recovered {
                     let path = format!("/recovered/{name}");
@@ -208,15 +252,25 @@ pub async fn start(canvas_id: String) -> Result<(), JsValue> {
                         Ok(_) => {
                             // the recovered changes are unsaved
                             session.saved_revision = 0;
-                            toast = Some(format!("Recovered unsaved changes to {name}"));
+                            toast = Some(format!("Восстановлены несохранённые изменения проекта {name}"));
                         }
                         Err(e) => log::warn!("recovery failed: {e}"),
                     }
                 } else if demo {
                     let _ = session.execute("file.openDemoProject", json!({}));
+                } else if !in_host_mode {
+                    let _ = session.execute("file.newProject", json!({"name": "Без названия"}));
                 }
                 let mut app = FilmcraftApp::new(session);
                 import::install_hooks(&mut app);
+                if !in_host_mode {
+                    // Save of a project with no file yet: the page asks for the name.
+                    app.hooks.pick_save = Some(Box::new(|name: &str| if bridge::ask_save_name(name) { None } else { Some(format!("/projects/{name}")) }));
+                    // The house at the right of the header goes back to the site; «ИИ» opens the
+                    // page's AI menu.
+                    app.hooks.go_home = Some(Box::new(go_home));
+                    app.hooks.ai_assist = Some(Box::new(bridge::ai_menu));
+                }
                 // Settings ▸ General ▸ Interface Language ▸ System Language (#218): the browser's languages.
                 app.hooks.system_languages =
                     Some(Box::new(|| web_sys::window().map(|w| w.navigator().languages().iter().filter_map(|v| v.as_string()).collect()).unwrap_or_default()));

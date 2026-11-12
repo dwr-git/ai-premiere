@@ -1,0 +1,6 @@
+# Built by studio/build/package.sh:  trunk build --release   (from apps/ai-premiere-boot)
+[build]
+target = "index.html"
+dist = "../../dist/web-boot"
+public_url = "./"
+filehash = true

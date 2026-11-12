@@ -52,7 +52,7 @@ impl FilmcraftApp {
         }
         let t = self.tokens;
         let full = ui.max_rect();
-        ui.painter().rect_filled(full, 0.0, t.app_bg);
+        crate::theme::fill(ui.painter(), full, t.app_bg);
         if self.ui.fullscreen_program {
             ui.painter().rect_filled(full, 0.0, egui::Color32::BLACK);
             panels::monitor::show(self, ui, full, panels::monitor::Which::Program);

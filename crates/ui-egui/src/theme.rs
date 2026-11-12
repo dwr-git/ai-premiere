@@ -1,7 +1,10 @@
 //! Design tokens. Every widget reads colours/sizes from [`Tokens`] so themes apply everywhere.
 //!
-//! The default theme follows the look of Premiere Pro's current dark UI (values measured from
-//! black-box screenshots, see `plan/premiere/02-ui-ux.md`); fonts are Inter + JetBrains Mono (OFL).
+//! AI Видео: Dark and Light are our neumorphic palettes (NeuDark, NeuLight: soft blue-grey
+//! chrome, rounded corners, blue-tinted shadows); the Brand theme (navy chrome, the brand's
+//! blue-violet accent, solid black menus and windows with a strong black shadow, the brand
+//! backdrop behind the panels and around the monitors' pictures) is the browser build's default.
+//! Fonts are Inter + JetBrains Mono (OFL).
 
 use std::sync::Arc;
 
@@ -10,12 +13,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ThemeKind {
-    /// Premiere-style darkest (default).
+    /// NeuDark (default on the desktop).
     #[default]
     Dark,
-    /// Slightly lighter grey panels (Premiere's brightness slider mid position).
+    /// NeuDark with slightly lighter panels.
     Medium,
     Light,
+    /// AI Видео's Brand theme (the browser build starts in it).
+    Brand,
 }
 
 impl ThemeKind {
@@ -25,12 +30,14 @@ impl ThemeKind {
             ThemeKind::Dark => "darkest",
             ThemeKind::Medium => "dark",
             ThemeKind::Light => "light",
+            ThemeKind::Brand => "brand",
         }
     }
     pub fn from_pref(s: &str) -> ThemeKind {
         match s {
             "dark" => ThemeKind::Medium,
             "light" => ThemeKind::Light,
+            "brand" => ThemeKind::Brand,
             _ => ThemeKind::Dark,
         }
     }
@@ -39,6 +46,7 @@ impl ThemeKind {
             "dark" | "darkest" => Some(ThemeKind::Dark),
             "medium" | "grey" | "gray" => Some(ThemeKind::Medium),
             "light" => Some(ThemeKind::Light),
+            "brand" => Some(ThemeKind::Brand),
             _ => None,
         }
     }
@@ -241,93 +249,222 @@ impl Tokens {
             gap: 4.0,
             tab_h: 32.0,
         };
+        // NeuDark: chrome #262D3A, cards #282F3D, canvas #1B202A, fields #202632, text
+        // #E4EBF6 / #C4CFE0 / #A0ADC2, accent #5CA8FF (fills a shade deeper so white text reads).
+        let neu_dark = Tokens {
+            app_bg: hex(0x1b202a),
+            header_bg: hex(0x262d3a),
+            panel_bg: hex(0x282f3d),
+            tab_bg: hex(0x262d3a),
+            tab_text: hex(0xa0adc2),
+            tab_text_active: hex(0xe4ebf6),
+            focus: hex(0x5ca8ff),
+            accent: hex(0x3a8eea),
+            accent_hover: hex(0x5ca8ff),
+            text: hex(0xc4cfe0),
+            text_dim: hex(0xa0adc2),
+            text_faint: hex(0x6f7c92),
+            icon: hex(0xa0adc2),
+            icon_active: hex(0xe4ebf6),
+            hover: hex(0x313a4a),
+            pressed: hex(0x3b4558),
+            field_bg: hex(0x202632),
+            field_border: hex(0x3b4558),
+            separator: hex(0x343d4d),
+            row_alt: hex(0x2b3341),
+            row_selected: hex(0x2c4a6e),
+            hot_text: hex(0x8ec6ff),
+            pill_active_bg: hex(0x364052),
+            clip_bar_bg: hex(0x34405a),
+            control_surface: hex(0x2d3544),
+            control_well: hex(0x1e2430),
+            control_border: hex(0x4a5468),
+            control_handle_bg: hex(0x313a4a),
+            plot_bg: hex(0x1e2430),
+            plot_grid: hex(0x2b3342),
+            plot_axis: hex(0x3a4456),
+            keyframe_plot_bg: hex(0x1e2430),
+            keyframe_plot_grid: hex(0x2b3342),
+            keyframe_plot_axis: hex(0x3a4456),
+            button_hover: hex(0x313a4a),
+            button_border: hex(0x4a5468),
+            caption_track_bg: hex(0x2a2a44),
+            scroll_thumb: hex(0x4a5468),
+            scroll_thumb_hover: hex(0x5d687c),
+            vertical_scroll_thumb: hex(0x4a5468),
+            disabled_clip_bg: hex(0x313a4a),
+            tl_bg: hex(0x202632),
+            tl_track_bg: hex(0x252c39),
+            tl_track_bg_alt: hex(0x252c39),
+            tl_header_bg: hex(0x262d3a),
+            tl_ruler_bg: hex(0x222834),
+            tl_ruler_tick: hex(0x5d687c),
+            tl_ruler_text: hex(0xa0adc2),
+            playhead: hex(0x5ca8ff),
+            track_target: hex(0x2c6cb8),
+            in_out_shade: hex(0x3b4558),
+            monitor_bg: hex(0x1b202a),
+            timecode: hex(0x8ec6ff),
+            radius_sm: 6.0,
+            ..dark
+        };
         match kind {
-            ThemeKind::Dark => dark,
+            ThemeKind::Dark => neu_dark,
             ThemeKind::Medium => Tokens {
-                app_bg: Color32::from_rgb(20, 20, 20),
-                header_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                panel_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                tab_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                field_bg: Color32::from_rgb(0x22, 0x22, 0x22),
-                tl_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                tl_track_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                tl_track_bg_alt: Color32::from_rgb(0x32, 0x32, 0x32),
-                tl_header_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                tl_ruler_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                monitor_bg: Color32::from_rgb(0x32, 0x32, 0x32),
-                row_alt: Color32::from_rgb(50, 50, 50),
-                hover: Color32::from_rgb(64, 64, 64),
+                kind,
+                app_bg: hex(0x222834),
+                header_bg: hex(0x2d3544),
+                panel_bg: hex(0x2f3747),
+                tab_bg: hex(0x2d3544),
+                tl_header_bg: hex(0x2d3544),
+                tl_track_bg: hex(0x2b3341),
+                tl_track_bg_alt: hex(0x2b3341),
+                hover: hex(0x3a4456),
+                ..neu_dark
+            },
+            // NeuLight: chrome #E4ECF6, cards #E6EEF8, canvas #D6E0ED, fields #DCE6F3, text
+            // #1E2C42 / #34445E / #4E5E78, accent #3480E2, accent text #1652A8. Pages, frames and
+            // the pictures in the monitors keep their own colours.
+            ThemeKind::Light => Tokens {
+                app_bg: hex(0xd6e0ed),
+                header_bg: hex(0xe4ecf6),
+                panel_bg: hex(0xe6eef8),
+                tab_bg: hex(0xe4ecf6),
+                tab_text: hex(0x4e5e78),
+                tab_text_active: hex(0x1e2c42),
+                focus: hex(0x3480e2),
+                accent: hex(0x3480e2),
+                accent_hover: hex(0x1652a8),
+                text: hex(0x1e2c42),
+                text_dim: hex(0x4e5e78),
+                text_faint: hex(0x8d9ab0),
+                icon: hex(0x4e5e78),
+                hover: hex(0xd5e0ee),
+                pressed: hex(0xc9d6e8),
+                field_bg: hex(0xf3f7fc),
+                field_border: hex(0xb3c2d6),
+                separator: hex(0xc9d5e5),
+                row_alt: hex(0xe0e9f4),
+                row_selected: hex(0xc2d8f5),
+                hot_text: hex(0x1652a8),
+                pill_active_bg: hex(0xc9d6e8),
+                clip_bar_bg: hex(0xc2d3ec),
+                control_surface: hex(0xe0e9f4),
+                control_well: hex(0xcdd8e7),
+                control_border: hex(0x9aa9bf),
+                control_handle_bg: hex(0xd5e0ee),
+                control_handle: hex(0x1e2c42),
+                control_handle_dim: hex(0x4e5e78),
+                plot_bg: hex(0xf3f7fc),
+                plot_grid: hex(0xd5e0ee),
+                plot_axis: hex(0xb3c2d6),
+                plot_handle: hex(0x1e2c42),
+                plot_handle_dim: hex(0x4e5e78),
+                meter_bg: hex(0xcdd8e7),
+                meter_readout_bg: hex(0xdce6f3),
+                meter_clip_off: hex(0x9aa9bf),
+                panner_bg: hex(0xcdd8e7),
+                panner_border: hex(0x9aa9bf),
+                panner_speaker: hex(0x4e5e78),
+                fader_knob: hex(0x8d9ab0),
+                eq_track: hex(0xcdd8e7),
+                eq_tick: hex(0x9aa9bf),
+                eq_knob: hex(0x4e5e78),
+                eq_knob_active: hex(0x1e2c42),
+                eq_node: hex(0x34445e),
+                eq_node_off: hex(0x8d9ab0),
+                crossover_handle: hex(0x34445e),
+                keyframe_plot_bg: hex(0xf3f7fc),
+                keyframe_plot_grid: hex(0xd5e0ee),
+                keyframe_plot_axis: hex(0xb3c2d6),
+                keyframe_handle: hex(0x34445e),
+                switch_fill: hex(0x3480e2),
+                switch_knob: hex(0xf3f7fc),
+                switch_border: hex(0x8d9ab0),
+                slider_disabled_track: hex(0xc9d6e8),
+                slider_disabled_knob: hex(0x9aa9bf),
+                button_hover: hex(0xd5e0ee),
+                button_border: hex(0xb3c2d6),
+                icon_active: hex(0x1e2c42),
+                caption_track_bg: hex(0xdcd8f0),
+                scroll_thumb: hex(0xb3c2d6),
+                scroll_thumb_hover: hex(0x9aa9bf),
+                vertical_scroll_thumb: hex(0xb3c2d6),
+                disabled_clip_bg: hex(0xc9d6e8),
+                in_out_shade: hex(0xc2d0e2),
+                tl_bg: hex(0xdce6f3),
+                tl_track_bg: hex(0xe6eef8),
+                tl_track_bg_alt: hex(0xe9f0f8),
+                tl_header_bg: hex(0xe4ecf6),
+                tl_ruler_bg: hex(0xe9f0f8),
+                tl_ruler_tick: hex(0x8d9ab0),
+                tl_ruler_text: hex(0x34445e),
+                playhead: hex(0x3480e2),
+                track_target: hex(0x3480e2),
+                monitor_bg: hex(0xd6e0ed),
+                timecode: hex(0x1652a8),
+                clip_selected_border: hex(0x1e2c42),
+                radius_sm: 6.0,
                 ..dark
             },
-            ThemeKind::Light => Tokens {
-                app_bg: Color32::from_rgb(180, 180, 180),
-                header_bg: Color32::from_rgb(214, 214, 214),
-                panel_bg: Color32::from_rgb(232, 232, 232),
-                tab_bg: Color32::from_rgb(232, 232, 232),
-                tab_text: Color32::from_rgb(90, 90, 90),
-                tab_text_active: Color32::from_rgb(20, 20, 20),
-                text: Color32::from_rgb(34, 34, 34),
-                text_dim: Color32::from_rgb(90, 90, 90),
-                text_faint: Color32::from_rgb(140, 140, 140),
-                icon: Color32::from_rgb(60, 60, 60),
-                hover: Color32::from_rgb(210, 210, 210),
-                pressed: Color32::from_rgb(196, 196, 196),
-                field_bg: Color32::from_rgb(250, 250, 250),
-                field_border: Color32::from_rgb(170, 170, 170),
-                separator: Color32::from_rgb(200, 200, 200),
-                row_alt: Color32::from_rgb(224, 224, 224),
-                row_selected: Color32::from_rgb(170, 200, 240),
-                pill_active_bg: Color32::from_rgb(196, 196, 196),
-                clip_bar_bg: Color32::from_rgb(190, 203, 224),
-                control_surface: Color32::from_rgb(218, 218, 218),
-                control_well: Color32::from_rgb(196, 196, 196),
-                control_border: Color32::from_rgb(150, 150, 150),
-                control_handle_bg: Color32::from_rgb(205, 205, 205),
-                control_handle: Color32::from_rgb(50, 50, 50),
-                control_handle_dim: Color32::from_rgb(85, 85, 85),
-                plot_bg: Color32::from_rgb(245, 245, 245),
-                plot_grid: Color32::from_rgb(210, 210, 210),
-                plot_axis: Color32::from_rgb(170, 170, 170),
-                plot_handle: Color32::from_rgb(50, 50, 50),
-                plot_handle_dim: Color32::from_rgb(100, 100, 100),
-                meter_bg: Color32::from_rgb(205, 205, 205),
-                meter_readout_bg: Color32::from_rgb(218, 218, 218),
-                meter_clip_off: Color32::from_rgb(155, 155, 155),
-                panner_bg: Color32::from_gray(196),
-                panner_border: Color32::from_gray(150),
-                panner_speaker: Color32::from_gray(100),
-                fader_knob: Color32::from_gray(140),
-                eq_track: Color32::from_gray(196),
-                eq_tick: Color32::from_gray(150),
-                eq_knob: Color32::from_gray(85),
-                eq_knob_active: Color32::from_gray(34),
-                eq_node: Color32::from_gray(50),
-                eq_node_off: Color32::from_gray(140),
-                crossover_handle: Color32::from_gray(50),
-                keyframe_plot_bg: Color32::from_gray(245),
-                keyframe_plot_grid: Color32::from_gray(210),
-                keyframe_plot_axis: Color32::from_gray(170),
-                keyframe_handle: Color32::from_gray(50),
-                switch_fill: Color32::from_gray(60),
-                switch_knob: Color32::from_gray(232),
-                switch_border: Color32::from_gray(110),
-                slider_disabled_track: Color32::from_gray(190),
-                slider_disabled_knob: Color32::from_gray(140),
-                button_hover: Color32::from_gray(210),
-                button_border: Color32::from_gray(170),
-                icon_active: Color32::from_rgb(34, 34, 34),
-                caption_track_bg: Color32::from_rgb(222, 215, 233),
-                scroll_thumb: Color32::from_gray(150),
-                scroll_thumb_hover: Color32::from_gray(130),
-                vertical_scroll_thumb: Color32::from_gray(150),
-                disabled_clip_bg: Color32::from_gray(190),
-                in_out_shade: Color32::from_gray(185),
-                tl_bg: Color32::from_rgb(210, 210, 210),
-                tl_track_bg: Color32::from_rgb(222, 222, 222),
-                tl_track_bg_alt: Color32::from_rgb(228, 228, 228),
-                tl_header_bg: Color32::from_rgb(214, 214, 214),
-                tl_ruler_bg: Color32::from_rgb(226, 226, 226),
-                tl_ruler_text: Color32::from_rgb(80, 80, 80),
+            // Brand: the brand gradient's navy (#0a0a0f → #1a1a2e → #16213e) for the chrome, the
+            // brand's blue-violet (#667eea) for the accent. `app_bg` and `monitor_bg` are
+            // [`BRAND_CANVAS`]: [`fill`] paints the brand backdrop there.
+            ThemeKind::Brand => Tokens {
+                app_bg: BRAND_CANVAS,
+                header_bg: hex(0x0c0d17),
+                panel_bg: hex(0x111222),
+                tab_bg: hex(0x0c0d17),
+                tab_text: hex(0xb7bbd8),
+                tab_text_active: hex(0xffffff),
+                focus: hex(0x8a9bff),
+                accent: hex(0x667eea),
+                accent_hover: hex(0x7a8ff0),
+                text: hex(0xeef0ff),
+                text_dim: hex(0xb7bbd8),
+                text_faint: hex(0x6e7298),
+                icon: hex(0xb7bbd8),
+                icon_active: hex(0xffffff),
+                hover: hex(0x1f2238),
+                pressed: hex(0x2a2e4c),
+                field_bg: hex(0x0a0b14),
+                field_border: hex(0x2a2d46),
+                separator: hex(0x232640),
+                row_alt: hex(0x14162a),
+                row_selected: hex(0x2a3066),
+                hot_text: hex(0xa9b4ff),
+                pill_active_bg: hex(0x2a2e4c),
+                clip_bar_bg: hex(0x2a3066),
+                control_surface: hex(0x16182a),
+                control_well: hex(0x0a0b14),
+                control_border: hex(0x3a3e62),
+                control_handle_bg: hex(0x1f2238),
+                plot_bg: hex(0x0e0f1c),
+                plot_grid: hex(0x232640),
+                plot_axis: hex(0x30345a),
+                keyframe_plot_bg: hex(0x0e0f1c),
+                keyframe_plot_grid: hex(0x232640),
+                keyframe_plot_axis: hex(0x30345a),
+                button_hover: hex(0x1f2238),
+                button_border: hex(0x3a3e62),
+                caption_track_bg: hex(0x1c1a33),
+                scroll_thumb: hex(0x2a2d46),
+                scroll_thumb_hover: hex(0x3a3e62),
+                vertical_scroll_thumb: hex(0x2a2d46),
+                disabled_clip_bg: hex(0x1f2238),
+                tl_bg: hex(0x0e0f1c),
+                tl_track_bg: hex(0x14162a),
+                tl_track_bg_alt: hex(0x14162a),
+                tl_header_bg: hex(0x111222),
+                tl_ruler_bg: hex(0x12131f),
+                tl_ruler_tick: hex(0x5b5f84),
+                tl_ruler_text: hex(0xd8dbf0),
+                playhead: hex(0x8a9bff),
+                track_target: hex(0x5468d4),
+                in_out_shade: hex(0x2a2d46),
+                monitor_bg: BRAND_CANVAS,
+                timecode: hex(0xa9b4ff),
+                radius_sm: 6.0,
                 ..dark
             },
         }
@@ -337,6 +474,8 @@ impl Tokens {
     /// the focus outline, the playhead, timecodes, drag values and track targeting) and accessible
     /// colour contrast (brighter secondary text and borders).
     pub fn with_appearance(mut self, highlight: Option<[u8; 3]>, accessible_contrast: bool) -> Self {
+        // AI Видео: the default highlight is "the theme's own" (each palette has its accent).
+        let highlight = highlight.filter(|c| Some(*c) != filmcraft_engine::settings::parse_hex(filmcraft_engine::settings::DEFAULT_HIGHLIGHT));
         if let Some([r, g, b]) = highlight {
             let c = Color32::from_rgb(r, g, b);
             // A highlight of the user's own also colours the theme's other blues: the same hue, as
@@ -390,6 +529,84 @@ impl Tokens {
     pub fn timecode() -> FontId {
         FontId::new(16.0, FontFamily::Proportional)
     }
+}
+
+const fn hex(rgb: u32) -> Color32 {
+    Color32::from_rgb((rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8)
+}
+
+/// The colour the Brand backdrop reads as: `app_bg` and `monitor_bg` in the Brand theme.
+pub const BRAND_CANVAS: Color32 = Color32::from_rgb(0x16, 0x18, 0x2C);
+
+/// Fill `rect` with `color`, or with the brand backdrop when `color` is [`BRAND_CANVAS`].
+pub fn fill(painter: &egui::Painter, rect: egui::Rect, color: Color32) {
+    if color == BRAND_CANVAS {
+        paint_brand_backdrop(painter, rect);
+    } else {
+        painter.rect_filled(rect, 0.0, color);
+    }
+}
+
+/// The Brand theme's backdrop, as the owner's pages draw it in CSS: the brand gradient
+/// (#0a0a0f → #1a1a2e → #16213e at 135°), three soft glows (circles at 20% 80%, 80% 20% and
+/// 40% 40%, fading out halfway to the farthest corner), a 30 px grid of 5% white lines, and an
+/// inner shadow round the edges.
+pub fn paint_brand_backdrop(painter: &egui::Painter, rect: egui::Rect) {
+    use egui::epaint::{Mesh, Vertex, WHITE_UV};
+    if !(rect.width().is_finite() && rect.height().is_finite()) || rect.width() <= 0.0 || rect.height() <= 0.0 {
+        return;
+    }
+    // The glows reach past the rect: keep everything inside it.
+    let painter = &painter.with_clip_rect(painter.clip_rect().intersect(rect));
+    let vertex = |pos: egui::Pos2, color: Color32| Vertex { pos, uv: WHITE_UV, color };
+    let quad = |m: &mut Mesh, corners: [(egui::Pos2, Color32); 4]| {
+        let base = m.vertices.len() as u32;
+        m.vertices.extend(corners.iter().map(|(p, c)| vertex(*p, *c)));
+        m.indices.extend([base, base + 1, base + 2, base, base + 2, base + 3]);
+    };
+    let (a, mid, b) = (hex(0x0a0a0f), hex(0x1a1a2e), hex(0x16213e));
+    let mut m = Mesh::default();
+    quad(&mut m, [(rect.left_top(), a), (rect.right_top(), mid), (rect.right_bottom(), b), (rect.left_bottom(), mid)]);
+    painter.add(egui::Shape::mesh(m));
+    for (fx, fy, rgb, alpha) in [(0.2_f32, 0.8_f32, (120, 119, 198), 0.30_f32), (0.8, 0.2, (255, 119, 198), 0.30), (0.4, 0.4, (120, 219, 255), 0.20)] {
+        let c = rect.min + egui::vec2(rect.width() * fx, rect.height() * fy);
+        let far = egui::vec2(rect.width() * fx.max(1.0 - fx), rect.height() * fy.max(1.0 - fy)).length();
+        let reach = far * 0.5;
+        let inner = Color32::from_rgba_unmultiplied(rgb.0, rgb.1, rgb.2, (alpha * 255.0) as u8);
+        let mut g = Mesh::default();
+        g.vertices.push(vertex(c, inner));
+        const STEPS: u32 = 64;
+        for i in 0..=STEPS {
+            let angle = std::f32::consts::TAU * i as f32 / STEPS as f32;
+            g.vertices.push(vertex(c + egui::vec2(angle.cos(), angle.sin()) * reach, Color32::TRANSPARENT));
+        }
+        for i in 1..=STEPS {
+            g.indices.extend([0, i, i + 1]);
+        }
+        painter.add(egui::Shape::mesh(g));
+    }
+    let line = Stroke::new(1.0, Color32::from_rgba_unmultiplied(255, 255, 255, 13));
+    let mut x = rect.left() + 0.5;
+    while x < rect.right() {
+        painter.vline(x, rect.y_range(), line);
+        x += 30.0;
+    }
+    let mut y = rect.top() + 0.5;
+    while y < rect.bottom() {
+        painter.hline(rect.x_range(), y, line);
+        y += 30.0;
+    }
+    let dark = |a: f32| Color32::from_rgba_unmultiplied(0, 0, 0, (a * 153.0) as u8);
+    let mut sh = Mesh::default();
+    let r = rect;
+    for (i0, i1, a0, a1) in [(0.0_f32, 10.0_f32, 1.0_f32, 0.75_f32), (10.0, 45.0, 0.75, 0.0)] {
+        let (i0, i1) = (i0.min(r.height() / 2.0).min(r.width() / 2.0), i1.min(r.height() / 2.0).min(r.width() / 2.0));
+        quad(&mut sh, [(egui::pos2(r.left(), r.top() + i0), dark(a0)), (egui::pos2(r.right(), r.top() + i0), dark(a0)), (egui::pos2(r.right(), r.top() + i1), dark(a1)), (egui::pos2(r.left(), r.top() + i1), dark(a1))]);
+        quad(&mut sh, [(egui::pos2(r.left(), r.bottom() - i1), dark(a1)), (egui::pos2(r.right(), r.bottom() - i1), dark(a1)), (egui::pos2(r.right(), r.bottom() - i0), dark(a0)), (egui::pos2(r.left(), r.bottom() - i0), dark(a0))]);
+        quad(&mut sh, [(egui::pos2(r.left() + i0, r.top()), dark(a0)), (egui::pos2(r.left() + i1, r.top()), dark(a1)), (egui::pos2(r.left() + i1, r.bottom()), dark(a1)), (egui::pos2(r.left() + i0, r.bottom()), dark(a0))]);
+        quad(&mut sh, [(egui::pos2(r.right() - i1, r.top()), dark(a1)), (egui::pos2(r.right() - i0, r.top()), dark(a0)), (egui::pos2(r.right() - i0, r.bottom()), dark(a0)), (egui::pos2(r.right() - i1, r.bottom()), dark(a1))]);
+    }
+    painter.add(egui::Shape::mesh(sh));
 }
 
 /// Menu text: Premiere's menus are the system's, larger and brighter than panel text, one item
@@ -476,6 +693,29 @@ pub fn apply_visuals(ctx: &egui::Context, t: &Tokens) {
     v.menu_corner_radius = egui::CornerRadius::same(6);
     v.popup_shadow = egui::epaint::Shadow { offset: [0, 4], blur: 16, spread: 0, color: Color32::from_black_alpha(140) };
     v.window_shadow = v.popup_shadow;
+    match t.kind {
+        // Brand: menus, popups and windows are solid black blocks with a strong black shadow.
+        ThemeKind::Brand => {
+            v.window_fill = Color32::BLACK;
+            v.window_stroke = Stroke::new(1.0, hex(0x26283c));
+            v.window_corner_radius = egui::CornerRadius::same(8);
+            v.menu_corner_radius = egui::CornerRadius::same(6);
+            v.popup_shadow = egui::epaint::Shadow { offset: [0, 8], blur: 32, spread: 0, color: Color32::BLACK };
+            v.window_shadow = egui::epaint::Shadow { offset: [0, 10], blur: 36, spread: 2, color: Color32::BLACK };
+            v.hyperlink_color = hex(0xa9b4ff);
+            v.selection.stroke = Stroke::new(1.0, Color32::WHITE);
+        }
+        // Neumorphic Light and Dark: rounder windows and menus, soft shadows tinted with the
+        // palette's blue instead of grey.
+        _ => {
+            let shade = if light { Color32::from_rgba_unmultiplied(0x46, 0x5a, 0x82, 70) } else { Color32::from_black_alpha(150) };
+            v.window_corner_radius = egui::CornerRadius::same(10);
+            v.menu_corner_radius = egui::CornerRadius::same(8);
+            v.popup_shadow = egui::epaint::Shadow { offset: [0, 6], blur: 18, spread: 0, color: shade };
+            v.window_shadow = egui::epaint::Shadow { offset: [0, 10], blur: 30, spread: 0, color: shade };
+            v.hyperlink_color = if light { hex(0x1652a8) } else { hex(0x8ec6ff) };
+        }
+    }
     for w in [&mut v.widgets.noninteractive, &mut v.widgets.inactive, &mut v.widgets.hovered, &mut v.widgets.active, &mut v.widgets.open] {
         w.corner_radius = egui::CornerRadius::same(t.radius_sm as u8);
     }
@@ -553,27 +793,6 @@ mod tests {
         assert!(luminance(light.control_handle) < luminance(light.control_handle_bg));
         assert!(luminance(light.plot_handle) < luminance(light.plot_bg));
         assert!(luminance(light.icon_active) < luminance(light.pressed));
-        assert_eq!(Tokens::for_kind(ThemeKind::Medium).plot_bg, dark.plot_bg, "Medium keeps the established dark plot treatment");
-    }
-
-    #[test]
-    fn dark_and_medium_keep_existing_audio_and_effect_palettes() {
-        for kind in [ThemeKind::Dark, ThemeKind::Medium] {
-            let t = Tokens::for_kind(kind);
-            // Existing painted colors, recorded independently of the Light palette.
-            assert_eq!(t.pill_active_bg, Color32::from_gray(0x3a));
-            assert_eq!(t.clip_bar_bg, Color32::from_rgb(58, 58, 70));
-            assert_eq!(t.control_surface, Color32::from_gray(0x24));
-            assert_eq!(t.control_well, Color32::from_gray(0x10));
-            assert_eq!(t.control_handle, Color32::from_gray(0xe0));
-            assert_eq!(t.meter_bg, Color32::BLACK);
-            assert_eq!(t.plot_bg, Color32::from_gray(0x18));
-            assert_eq!(t.plot_grid, Color32::from_gray(0x2c));
-            assert_eq!(t.keyframe_plot_bg, Color32::from_gray(0x19));
-            assert_eq!(t.keyframe_plot_grid, Color32::from_gray(0x2a));
-            assert_eq!(t.keyframe_plot_axis, Color32::from_gray(0x33));
-            assert_eq!(t.keyframe_handle, Color32::from_gray(0xd0));
-        }
     }
 
     /// The colours the highlight drives besides the accent (#707).

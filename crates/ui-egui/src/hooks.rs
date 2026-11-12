@@ -96,6 +96,12 @@ pub struct HostHooks {
     /// Files or an image on the system clipboard, for Paste in the Timeline and the Project panel
     /// (#611). Without it Paste only pastes clips copied in FilmCraft.
     pub clipboard_media: Option<Box<dyn FnMut() -> Option<ClipboardMedia>>>,
+    /// AI Видео (web): leave the editor for the site it lives on. With it, the header shows a
+    /// house at its right end.
+    pub go_home: Option<Box<dyn FnMut()>>,
+    /// AI Видео (web): open the page's AI menu at this point (points from the canvas's top
+    /// left). With it, the header shows an «ИИ» chip next to the house.
+    pub ai_assist: Option<Box<dyn FnMut(f32, f32)>>,
 }
 
 /// What [`HostHooks::clipboard_media`] found on the system clipboard.

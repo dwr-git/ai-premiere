@@ -126,7 +126,7 @@ const BIN_OPEN: &[(&str, &str)] = &[("openInPlace", "Open in place"), ("openNewT
 
 const PROJECT_OPEN: &[(&str, &str)] = &[("openNewTab", "Open new tab"), ("openNewWindow", "Open in new window")];
 
-const THEMES: &[(&str, &str)] = &[("darkest", "Darkest"), ("dark", "Dark"), ("light", "Light")];
+const THEMES: &[(&str, &str)] = &[("brand", "Brand"), ("darkest", "Darkest"), ("dark", "Dark"), ("light", "Light")];
 
 pub const APPEARANCE_MODES: &[(&str, &str)] = &[("auto", "Sync with system"), ("dark", "Dark"), ("light", "Light")];
 
@@ -142,7 +142,8 @@ pub const UI_SCALES: &[(&str, &str)] = &[
     ("300", "300%"),
 ];
 
-pub const DARK_THEMES: &[(&str, &str)] = &[("darkest", "Darkest"), ("dark", "Dark")];
+// AI Видео: "brand" is the Brand theme (the browser build's default), a dark-family theme.
+pub const DARK_THEMES: &[(&str, &str)] = &[("brand", "Brand"), ("darkest", "Darkest"), ("dark", "Dark")];
 
 pub const LIGHT_THEMES: &[(&str, &str)] = &[("light", "Light")];
 

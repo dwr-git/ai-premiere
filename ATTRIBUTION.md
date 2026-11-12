@@ -1,6 +1,6 @@
 # Attribution
 
-Every non-code asset in FilmCraft, with its author, source and licence. Each file listed here also has
+Every non-code asset in FilmCraft (and AI Видео, built from it), with its author, source and licence. Each file listed here also has
 a `<file>.attribution` sidecar with full details. The rules are in [AGENTS.md](AGENTS.md) §1: no Adobe
 iconography, images or other Adobe assets; open licences only; every asset attributed.
 `cargo xtask assets` checks that this index and the sidecars cover every asset in the repository.
@@ -140,23 +140,16 @@ carry each font's licence as `OFL-<family>.txt`.
 | Noto Sans Thai Regular (Google) | Thai fallback for titles (native builds) | OFL-1.1 |
 | Noto Sans Georgian Regular (Google) | Georgian fallback for titles (native builds) | OFL-1.1 |
 
-## First-party brand marks
+## AI Видео (this fork)
 
-The ArtCraft name, wordmark and logos are trademarks of the ArtCraft Team. They are not open source and
-are not covered by the project licence; they may be used only unmodified and only in the context of
-FilmCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt). Forks and modified versions must
-remove them (AGENTS.md §1.8).
+AI Видео carries none of the ArtCraft marks: `docs/brand/` and the wordmark in the UI were removed, as
+their licence requires of modified versions. Added for AI Видео:
 
-| File | Author | Source | Licence |
+| Asset | Author | Source | Licence |
 |---|---|---|---|
-| `docs/brand/artcraft-logo-white.png` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft wordmark, light ink for dark backgrounds) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
-| `docs/brand/artcraft-logo-white.svg` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft wordmark, light ink for dark backgrounds) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
-| `docs/brand/artcraft-logo.png` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft wordmark (symbol + "ARTCRAFT"), dark ink for light backgrounds) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
-| `docs/brand/artcraft-logo.svg` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft wordmark (symbol + "ARTCRAFT"), dark ink for light backgrounds) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
-| `docs/brand/artcraft-mark-black.png` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft symbol ("A" mark), black) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
-| `docs/brand/artcraft-mark-black.svg` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft symbol ("A" mark), black) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
-| `docs/brand/artcraft-mark.png` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft symbol ("A" mark), blue) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
-| `docs/brand/artcraft-mark.svg` | ArtCraft Team | Original work: first-party ArtCraft brand mark (ArtCraft symbol ("A" mark), blue) | ArtCraft trademark, not open source; `docs/brand/LICENSE-brand.txt` (not MIT/Apache) |
+| `studio/web/favicon.png` | Dewiar | Dewiar favicon — owner's own artwork, provided by the project owner for use in these apps (the same browser-tab icon in every AI app) | provided by the owner for these apps |
+| `studio/web/apple-touch-icon.png` | Dewiar | original work made for the AI apps (icon id `video`), rendered from its SVG at 180 px | MIT OR Apache-2.0 |
+| `fonts/` in the packaged site (not in the repository) | Liberation: Red Hat / Ascender; Carlito, Caladea: Google / tyPoland | Ubuntu packages fonts-liberation, fonts-crosextra-carlito, fonts-crosextra-caladea, fetched by CI; licence texts shipped next to them | OFL-1.1 (Liberation 2.x, Carlito, Caladea) |
 
 ## Third-party source code
 

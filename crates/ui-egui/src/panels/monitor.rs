@@ -54,7 +54,7 @@ fn draw_picture(app: &mut FilmcraftApp, ui: &mut egui::Ui, which: Which, mv: &cr
     if mv.transparency_grid {
         monitor_view::transparency_grid(ui.painter(), pic, ui.clip_rect());
     } else {
-        ui.painter().rect_filled(pic, 0.0, t.monitor_bg);
+        crate::theme::fill(ui.painter(), pic, t.monitor_bg);
     }
     let playing = if which == Which::Program { app.playback.playing } else { app.source_playback.clock.playing };
     let res = mv.effective_res(playing);

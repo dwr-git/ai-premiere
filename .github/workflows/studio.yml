@@ -1,0 +1,122 @@
+# Сборка AI Видео: готовая папка для сервера (zip).
+#
+# Запускается на каждое изменение ветки main и вручную (Actions → «Сборка» → Run workflow).
+# Результат:
+#   - Releases → «Сборка N — дата» (отдельный выпуск на каждую сборку, свежая отмечена Latest):
+#     ai-premiere-build-N-ГГГГ-ММ-ДД.zip; что нового — из studio/CHANGES.ru.md
+#   - Actions → запуск → Artifacts: тот же zip
+# Rust, wasm-bindgen, trunk и всё остальное ставятся только здесь, на машине GitHub. На ваш сервер
+# попадают готовые файлы: index.php, js, сжатый wasm частями, шрифты, PHP помощника.
+name: Сборка
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: studio-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: AI Видео (браузер)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      TRUNK_VERSION: 0.21.14
+      BINARYEN_VERSION: "123"
+      AI_PREMIERE_BUILD: ${{ github.run_number }}
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Открытые шрифты для титров
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-liberation fonts-crosextra-carlito fonts-crosextra-caladea
+          mkdir -p "$RUNNER_TEMP/fonts"
+          # Liberation (метрики Arial, Times New Roman, Courier New), Carlito (Calibri), Caladea (Cambria); все с кириллицей.
+          for f in $(fc-list -f '%{file}\n' | grep -E '/(liberation|crosextra)/.*\.ttf$' | sort -u); do cp "$f" "$RUNNER_TEMP/fonts/"; done
+          cp /usr/share/doc/fonts-liberation/copyright "$RUNNER_TEMP/fonts/LICENSE-Liberation.txt"
+          cp /usr/share/doc/fonts-crosextra-carlito/copyright "$RUNNER_TEMP/fonts/LICENSE-Carlito.txt"
+          cp /usr/share/doc/fonts-crosextra-caladea/copyright "$RUNNER_TEMP/fonts/LICENSE-Caladea.txt"
+          ls -la "$RUNNER_TEMP/fonts"
+          test "$(ls "$RUNNER_TEMP"/fonts/*.ttf | wc -l)" -ge 12
+
+      - name: Rust для WebAssembly
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Кэш сборки
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: studio-web
+          cache-on-failure: true
+
+      - name: Установить wasm-bindgen, wasm-opt и trunk
+        run: |
+          set -euo pipefail
+          WB="$(sed -n 's/^const WASM_BINDGEN: &str = "\(.*\)";$/\1/p' xtask/src/main.rs)"
+          mkdir -p "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/bin:$PATH"
+          if curl --proto '=https' -fsSL "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${WB}/wasm-bindgen-${WB}-x86_64-unknown-linux-musl.tar.gz" -o wb.tgz; then
+            tar -xzf wb.tgz && cp "wasm-bindgen-${WB}-x86_64-unknown-linux-musl/wasm-bindgen" "$HOME/.local/bin/"
+          else
+            cargo install wasm-bindgen-cli --version "$WB" --locked --root "$HOME/.local"
+          fi
+          wasm-bindgen --version
+          if curl --proto '=https' -fsSL "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" -o binaryen.tgz; then
+            tar -xzf binaryen.tgz && cp "binaryen-version_${BINARYEN_VERSION}/bin/wasm-opt" "$HOME/.local/bin/"
+            cp -R "binaryen-version_${BINARYEN_VERSION}/lib" "$HOME/.local/" 2>/dev/null || true
+            wasm-opt --version || rm -f "$HOME/.local/bin/wasm-opt"
+          fi
+          curl --proto '=https' -fsSL "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" \
+            | tar -xz -C "$HOME/.local/bin" trunk
+          trunk --version
+
+      - name: Проверить PHP помощника
+        run: for f in studio/api/*.php; do php -l "$f"; done
+
+      - name: Проверить JavaScript панели
+        run: for f in studio/web/*.js; do node --check "$f"; done
+
+      - name: Собрать сайт
+        run: |
+          export AI_PREMIERE_FONTS_DIR="$RUNNER_TEMP/fonts"
+          studio/build/package.sh
+
+      - name: Сохранить zip в Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-premiere
+          path: dist/release/ai-premiere-build-*.zip
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Выложить в Releases (отдельная сборка с номером)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ZIP=$(ls dist/release/ai-premiere-build-*.zip)
+          DATE=$(TZ=Europe/Minsk date +%d.%m.%Y)
+          # Что нового: верхний раздел studio/CHANGES.ru.md (от первого «## » до следующего).
+          awk '/^## /{n++} n==1' studio/CHANGES.ru.md > notes.md
+          {
+            echo
+            echo "---"
+            echo "Скачайте zip ниже, распакуйте и положите папку ai-premiere на сервер вместо старой (имя папки можно менять)."
+            echo "Номер установленной сборки виден в шапке панели помощника. Инструкция: README.ru.md в папке."
+          } >> notes.md
+          # Повторный запуск той же сборки заменяет её выпуск.
+          gh release delete "build-${AI_PREMIERE_BUILD}" --cleanup-tag --yes 2>/dev/null || true
+          gh release create "build-${AI_PREMIERE_BUILD}" "$ZIP" \
+            --target "$GITHUB_SHA" \
+            --latest \
+            --title "Сборка ${AI_PREMIERE_BUILD} — ${DATE}" \
+            --notes-file notes.md

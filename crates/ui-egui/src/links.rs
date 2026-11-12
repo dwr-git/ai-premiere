@@ -26,6 +26,12 @@ pub const ALL: [(&str, &str, &str); 5] = [
     ("help.reportIssue", "Report an Issue…", ISSUES),
 ];
 
+/// Menu items that would open a page on the internet (community, website, GitHub, online help)
+/// or check for updates there: AI Видео leaves them out of its menus.
+pub fn is_internet_item(id: &str) -> bool {
+    url_for(id).is_some() || matches!(id, "help.filmcraftHelp" | "app.checkForUpdates")
+}
+
 /// A link the web browser couldn't open (`ui.failedLink`): the address and the reason.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct FailedLink {

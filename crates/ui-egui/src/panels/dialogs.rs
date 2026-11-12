@@ -455,57 +455,25 @@ fn about(app: &mut FilmcraftApp, ui: &mut egui::Ui) {
     }
 }
 
-/// About ▸ About: version, licence and the ArtCraft community links. Joining the Discord is the
-/// first, accented button.
-///
-/// Automation ids: `about.discord`, `about.website`, `about.appPage`, `about.github`,
-/// `about.reportIssue`.
+/// About ▸ About: the product, its version, where it comes from and the licence. AI Видео
+/// shows no links: the product loads nothing from the internet.
 fn about_tab(app: &mut FilmcraftApp, ui: &mut egui::Ui) {
-    use crate::icons::{self, Icon};
-    use crate::links;
     let t = app.tokens;
     ui.set_width(380.0);
-    // ArtCraft wordmark (first-party trademark, docs/brand/).
-    let (r, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 30.0), egui::Sense::hover());
-    crate::brand::paint_wordmark(ui, egui::pos2(r.min.x, r.center().y), 20.0, app.ui.dark);
     ui.add_space(6.0);
-    ui.heading("FilmCraft");
+    ui.heading("AI Видео");
     ui.label(tlf!("Version {version}", version = env!("CARGO_PKG_VERSION")));
-    ui.label(tl!("A clean-room, pure-Rust non-linear video editor. Part of the ArtCraft family."));
-    ui.add_space(10.0);
-    let mut link = |ui: &mut egui::Ui, id: &str, icon: Icon, label: &str, url: &str, primary: bool| {
-        let size = egui::vec2(ui.available_width(), if primary { 36.0 } else { 28.0 });
-        let (r, resp) = ui.allocate_exact_size(size, egui::Sense::click());
-        let resp = resp.on_hover_text(url);
-        app.auto.add(&format!("about.{id}"), r, label);
-        let bg = if primary {
-            if resp.hovered() { t.accent_hover } else { t.accent }
-        } else if resp.hovered() {
-            t.hover
-        } else {
-            egui::Color32::TRANSPARENT
-        };
-        ui.painter().rect_filled(r, 6.0, bg);
-        let fg = if primary { egui::Color32::WHITE } else { t.text };
-        let ir = egui::Rect::from_center_size(egui::pos2(r.min.x + 20.0, r.center().y), egui::vec2(18.0, 18.0));
-        icons::paint(ui.painter(), ir, icon, fg);
-        ui.painter().text(
-            egui::pos2(r.min.x + 40.0, r.center().y),
-            egui::Align2::LEFT_CENTER,
-            label,
-            crate::theme::Tokens::ui(if primary { 14.0 } else { 13.0 }),
-            fg,
-        );
-        if resp.clicked() {
-            links::open(app, ui.ctx(), url);
-        }
-    };
-    link(ui, "discord", Icon::Chat, tl!("Join the ArtCraft Discord"), links::DISCORD, true);
+    ui.label("Видеоредактор в браузере со встроенным ИИ-помощником.");
     ui.add_space(6.0);
-    link(ui, "website", Icon::Globe, "getartcraft.com", links::WEBSITE, false);
-    link(ui, "appPage", Icon::Globe, tl!("FilmCraft on getartcraft.com"), links::APP_PAGE, false);
-    link(ui, "github", Icon::Code, tl!("Source code on GitHub"), links::GITHUB, false);
-    link(ui, "reportIssue", Icon::Code, tl!("Report an issue"), links::ISSUES, false);
+    ui.label("Основан на FilmCraft от команды ArtCraft (github.com/storytold/filmcraft).");
+    ui.add_space(6.0);
+    ui.label(
+        egui::RichText::new(
+            "Premiere Pro — товарный знак Adobe. AI Видео не связан с Adobe и работает с распространёнными форматами видео, звука и обмена монтажом (EDL, XML, AAF).",
+        )
+        .small()
+        .color(t.text_dim),
+    );
     ui.add_space(10.0);
     ui.label(egui::RichText::new(tl!("MIT OR Apache-2.0. Fonts: Inter, Noto Serif and JetBrains Mono (SIL OFL 1.1).")).small().color(t.text_dim));
 }

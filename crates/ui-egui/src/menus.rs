@@ -113,6 +113,7 @@ pub const UI_COMMANDS: &[UiCommand] = &[
     uic!("voiceover.recordToggle", "Voice-over Record", [], None),
     uic!("voiceover.settingsDialog", "Voice-Over Record Settings…", [], None),
     // ids follow `ThemeKind`, labels follow Settings ▸ Appearance ▸ Color Theme (`darkest`, `dark`, `light`)
+    uic!("view.theme.brand", "Brand", ["View", "Appearance"], None),
     uic!("view.theme.dark", "Darkest", ["View", "Appearance"], None),
     uic!("view.theme.medium", "Dark", ["View", "Appearance"], None),
     uic!("view.theme.light", "Light", ["View", "Appearance"], None),
@@ -190,6 +191,10 @@ pub fn targets_source(app: &FilmcraftApp, params: &Value) -> bool {
 
 /// Route menu editing to the focused text field; automation can explicitly invoke the engine.
 pub fn invoke(app: &mut FilmcraftApp, ctx: &egui::Context, id: &str, params: Value) -> Result<Value, String> {
+    // AI Видео opens no pages on the internet (F1, old shortcuts, scripts).
+    if crate::links::is_internet_item(id) {
+        return Err("В AI Видео нет ссылок на сайты в интернете.".into());
+    }
     if text_field_window(ctx).is_some() && edits_text(id) {
         return activate_native(app, ctx, id);
     }
@@ -966,6 +971,9 @@ pub fn menu_items(app: &FilmcraftApp) -> Vec<MenuItem> {
     }
     crate::panels::workspaces::menu(app, &mut v);
     open_recent(&mut v, &app.session, |n| app.ui.language.tr(n).to_string());
+    // AI Видео loads nothing from the internet: no community, website, GitHub, help or update
+    // items in the menus.
+    v.retain(|it| !crate::links::is_internet_item(&it.id));
     v
 }
 
