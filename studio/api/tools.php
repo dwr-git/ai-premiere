@@ -208,7 +208,8 @@ TXT;
    - переходы: sequence.applyVideoTransition {clip, edge: in|out, effect: cross_dissolve|dip_to_black|…, frames};
      звук: sequence.applyAudioTransition {clip, edge, effect: constant_power, frames}; список переходов — list_effects;
    - титры: graphics.newText {text, seconds: длительность, time (ticks)?, size?, position: [x, y]?, track?};
-     текст: graphics.setText {clip, layer, text}; шрифт, размер, цвет, выравнивание: graphics.set {clip, layer, props: {…}};
+     текст по центру кадра: сразу после создания graphics.set {clip, layer: 0, props: {align: "center"}};
+     текст: graphics.setText {clip, layer, text}; шрифт, размер, цвет: graphics.set {clip, layer, props: {font, size, fill_color, …}};
    - субтитры: дорожка captions.newTrack {format: "Subtitle", language: "ru"}; субтитр: captions.add {text, time (ticks) | seconds, durationSeconds};
      текст: captions.setText {caption, text}; время: captions.setTimes; стиль дорожки: captions.setStyle {track, font, size, …};
    - цвет: effects.apply {clips, effect: "lumetri"}, затем effects.setParam {clip, effect: "lumetri", param, value}

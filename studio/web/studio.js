@@ -1482,7 +1482,9 @@
         const q = await workSequence();
         const text = await askName('Текст титра', 'Название ролика', 'Титр встанет в начало ролика на 3 секунды над видео.');
         if (!text) return 'skip';
-        await run('graphics.newText', { text, time: 0, seconds: 3, size: Math.round(((q.settings && q.settings.height) || 1080) / 10) });
+        const r = await run('graphics.newText', { text, time: 0, seconds: 3, size: Math.round(((q.settings && q.settings.height) || 1080) / 10) });
+        // По центру кадра: точка выравнивания текста стоит в середине кадра.
+        if (r && r.clip != null) await run('graphics.set', { clip: r.clip, layer: r.layer ?? 0, props: { align: 'center' } }).catch(() => {});
       }],
       ['Субтитр здесь', 'Новый субтитр в точке указателя, 3 с', async () => {
         const q = await workSequence();

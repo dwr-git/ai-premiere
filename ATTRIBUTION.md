@@ -148,7 +148,7 @@ their licence requires of modified versions. Added for AI Видео:
 | Asset | Author | Source | Licence |
 |---|---|---|---|
 | `studio/web/favicon.png` | Dewiar | Dewiar favicon — owner's own artwork, provided by the project owner for use in these apps (the same browser-tab icon in every AI app) | provided by the owner for these apps |
-| `studio/web/apple-touch-icon.png` | Dewiar | original work made for the AI apps (icon id `video`), rendered from its SVG at 180 px | MIT OR Apache-2.0 |
+| `studio/web/apple-touch-icon.png` | Dewiar | original work made for the AI apps (icon id `video`), resized from png512/video.png to 180 px | MIT OR Apache-2.0 |
 | `fonts/` in the packaged site (not in the repository) | Liberation: Red Hat / Ascender; Carlito, Caladea: Google / tyPoland | Ubuntu packages fonts-liberation, fonts-crosextra-carlito, fonts-crosextra-caladea, fetched by CI; licence texts shipped next to them | OFL-1.1 (Liberation 2.x, Carlito, Caladea) |
 
 ## Third-party source code

@@ -96,17 +96,23 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
         let fs = ui.ctx().input(|i| i.viewport().fullscreen.unwrap_or(false));
         ui.ctx().send_viewport_cmd(egui::ViewportCommand::Fullscreen(!fs));
     }
-    if btn(ui, Icon::Speaker, "volume", tl!("Volume"), app).clicked() {
-        app.ui.status = tl!("Master volume: use the Audio Track Mixer").into();
-    }
-    if btn(ui, Icon::Search, "search", tl!("Search"), app).clicked() {
-        app.show_panel(crate::dock::PanelKind::Effects);
-    }
-    if btn(ui, Icon::Bell, "notifications", tl!("Progress"), app).clicked() {
-        app.ui.mode = Mode::Export;
+    // On the web (AI Видео) the header is narrower (the assistant panel sits beside it): the
+    // volume, search and progress buttons stay out, and the theme is chosen in the panel.
+    let web = app.hooks.go_home.is_some();
+    if !web {
+        if btn(ui, Icon::Speaker, "volume", tl!("Volume"), app).clicked() {
+            app.ui.status = tl!("Master volume: use the Audio Track Mixer").into();
+        }
+        if btn(ui, Icon::Search, "search", tl!("Search"), app).clicked() {
+            app.show_panel(crate::dock::PanelKind::Effects);
+        }
+        if btn(ui, Icon::Bell, "notifications", tl!("Progress"), app).clicked() {
+            app.ui.mode = Mode::Export;
+        }
     }
     // Quick Export: a popup with File Name & Location, a preset list and Export (Premiere 26)
-    let qx = rect.max.x - 14.0 - web_w - 4.0 * 38.0; // the fifth button from the right
+    let before = if web { 1.0 } else { 4.0 };
+    let qx = rect.max.x - 14.0 - web_w - before * 38.0; // the button after Full screen and the others
     if btn(ui, Icon::Export, "quickExport", tl!("Quick Export"), app).clicked() {
         app.ui.export.quick_open = !app.ui.export.quick_open;
         ui.ctx().data_mut(|d| d.insert_temp(egui::Id::unique("quick-export-toggled"), true));
@@ -119,19 +125,29 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
         _ => (Icon::Moon, tl!("Dark")),
     };
     let tip = format!("{}: {mode}", tl!("Appearance Mode"));
-    let appearance = btn(ui, icon, "appearance", &tip, app);
-    appearance.context_menu(|ui| crate::panels::settings::appearance_context_menu(app, ui));
-    if appearance.clicked() {
-        crate::panels::settings::cycle_appearance(app, ui.ctx());
+    if !web {
+        let appearance = btn(ui, icon, "appearance", &tip, app);
+        appearance.context_menu(|ui| crate::panels::settings::appearance_context_menu(app, ui));
+        if appearance.clicked() {
+            crate::panels::settings::cycle_appearance(app, ui.ctx());
+        }
     }
     let ws_resp = btn(ui, Icon::Workspaces, "workspaces", tl!("Workspaces"), app);
     // workspace name (caps)
     let ws = crate::i18n::to_uppercase(crate::i18n::t(&app.ui.workspace));
     let wg = p.layout_no_wrap(ws.clone(), Tokens::ui(11.0), t.text_dim);
-    let wr = Rect::from_min_size(pos2(rx - wg.size().x + 10.0, rect.center().y - 10.0), vec2(wg.size().x + 8.0, 20.0));
+    let mut wr = Rect::from_min_size(pos2(rx - wg.size().x + 10.0, rect.center().y - 10.0), vec2(wg.size().x + 8.0, 20.0));
+    // A narrow window (the web app beside its assistant panel): the name only where it doesn't
+    // run into the menus; the workspaces button stays.
+    let ws_room = wr.min.x >= left_end + 8.0;
+    if !ws_room {
+        wr = Rect::from_min_size(pos2(rx + 10.0, rect.center().y - 10.0), vec2(0.0, 20.0));
+    }
     let wresp = ui.interact(wr, egui::Id::unique("hdr-ws-name"), Sense::click());
     app.auto.add("header.workspaceName", wr, &ws);
-    p.galley_with_override_text_color(pos2(wr.min.x + 4.0, rect.center().y - wg.size().y / 2.0), wg, if wresp.hovered() { t.text } else { t.text_dim });
+    if ws_room {
+        p.galley_with_override_text_color(pos2(wr.min.x + 4.0, rect.center().y - wg.size().y / 2.0), wg, if wresp.hovered() { t.text } else { t.text_dim });
+    }
     // The document title, centred in the room between the menus and the workspace name.
     {
         let left = left_end + 12.0;

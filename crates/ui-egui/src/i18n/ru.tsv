@@ -3741,3 +3741,23 @@
 	Toggle Color Grading Section	Переключить раздел грейдинга
 	Color Grading Section	Раздел грейдинга
 	Read Video Scopes	Считать данные видеоскопов
+	Caption Track	Дорожка субтитров
+	Copy of the project saved to {path}	Копия проекта сохранена: {path}
+	Cube LUT	LUT в формате Cube
+	Export .cube…	Экспорт .cube…
+	Exported {path}; not in the LUT: {effects}	Экспортировано: {path}; в LUT не вошли: {effects}
+	From preset file:	Из файла пресетов:
+	Imported {n} preset(s)	Импортировано пресетов: {n}
+	Imported {n} preset(s); not imported: {error}	Импортировано пресетов: {n}; не импортировано: {error}
+	Imported {n} preset(s); {skipped} skipped	Импортировано пресетов: {n}; пропущено: {skipped}
+	Imported {n} preset(s); {skipped} skipped, {warnings} with unsupported parameters	Импортировано пресетов: {n}; пропущено: {skipped}; с неподдерживаемыми параметрами: {warnings}
+	Imported {n} preset(s); {warnings} with unsupported parameters	Импортировано пресетов: {n}; с неподдерживаемыми параметрами: {warnings}
+	No presets folder: the app has no data directory	Нет папки пресетов: у программы нет папки данных
+	Open Presets Folder	Открыть папку пресетов
+	Preset library is up to date	Библиотека пресетов актуальна
+	Preset library updated	Библиотека пресетов обновлена
+	Preset library updated: {imported} loaded, {removed} removed	Библиотека пресетов обновлена: загружено {imported}, удалено {removed}
+	Project saved to {path}	Проект сохранён: {path}
+	Scan Presets Folder	Просканировать папку пресетов
+	This preference is not available yet.	Этот параметр пока недоступен.
+	Ticked attributes are removed from the selected clips.	Отмеченные атрибуты будут удалены из выделенных клипов.
